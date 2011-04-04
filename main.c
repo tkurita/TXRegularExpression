@@ -65,13 +65,33 @@ void test_CFStringCreateArrayWithFirstMatch()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("a+"), 0, &parse_error, &status);
+	TXRegularExpression *regexp = TXRegexCreate(CFSTR("basename(-([0-9\\.]+))?\\.(applescript|scptd|scpt)"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
 	}
 	
-	CFArrayRef array = CFStringCreateArrayWithFirstMatch(CFSTR("aaaadbbaabccc"), regexp, 0, &status);
+	CFArrayRef array = CFStringCreateArrayWithFirstMatch(CFSTR("basename-1.scptd"), regexp, 0, &status);
+	if (status != U_ZERO_ERROR) {
+		fprintf(stderr, "Error on RegexFirstMatchInString with UErrorCode : %d\n", status);
+		return;
+	}
+	
+	CFShow(array);	
+}
+
+void test_CFStringCreateArrayWithFirstMatch2()
+{
+	UParseError parse_error;
+	UErrorCode status = U_ZERO_ERROR;
+	
+	TXRegularExpression *regexp = TXRegexCreate(CFSTR("\\s*(<|>|>=|=<)?\\s*([0-9\\.]+)\\s*"), 0, &parse_error, &status);
+	if (status != U_ZERO_ERROR) {
+		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
+		return;
+	}
+	
+	CFArrayRef array = CFStringCreateArrayWithFirstMatch(CFSTR(">= 1.2.3"), regexp, 0, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexFirstMatchInString with UErrorCode : %d\n", status);
 		return;
@@ -85,13 +105,13 @@ void test_CFStringCreateArrayWithAllMatches()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("a+"), 0, &parse_error, &status);
+	TXRegularExpression *regexp = TXRegexCreate(CFSTR("\\s*(<|>|>=|=<)?\\s*([0-9\\.]+)\\s*"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
 	}
 	
-	CFArrayRef array = CFStringCreateArrayWithAllMatches(CFSTR("aaaadbbaabccc"), regexp, &status);
+	CFArrayRef array = CFStringCreateArrayWithAllMatches(CFSTR(">= 1.2.3 < 1.2.4 1.1.1"), regexp, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on CFStringCreateArrayWithAllMatches with UErrorCode : %d\n", status);
 		return;
@@ -102,7 +122,6 @@ void test_CFStringCreateArrayWithAllMatches()
 
 void test_CFStringCreateByReplacingFirstMatch()
 {
-    // insert code here...
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
@@ -126,7 +145,6 @@ void test_CFStringCreateByReplacingFirstMatch()
 
 void test_CFStringCreateByReplacingAllMatches()
 {
-    // insert code here...
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
@@ -148,13 +166,27 @@ void test_CFStringCreateByReplacingAllMatches()
 	CFShow(string);
 }
 
+void test_fprintfPaseError()
+{
+	UParseError parse_error;
+	UErrorCode status = U_ZERO_ERROR;
+	
+	TXRegularExpression *regexp = TXRegexCreate(CFSTR("a+)"), 0, &parse_error, &status);
+	if (status != U_ZERO_ERROR) {
+		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
+	}
+	fprintParseError(stderr, &parse_error);
+}
+
 int main (int argc, const char * argv[]) {
 	//test_RegexFirstMatchInString();
-	test_TXRegexAllMatchesInString();
+	//test_TXRegexAllMatchesInString();
 	//test_CFStringCreateArrayWithFirstMatch();
+	//test_CFStringCreateArrayWithFirstMatch2();
 	//test_CFStringCreateArrayWithAllMatches();
 	//test_CFStringCreateArrayByRegexSplitting();
 	//test_CFStringCreateByReplacingFirstMatch();
 	//test_CFStringCreateByReplacingAllMatches();
+	test_fprintfPaseError();
 	return 0;
 }

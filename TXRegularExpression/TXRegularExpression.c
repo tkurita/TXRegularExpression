@@ -129,6 +129,14 @@ void TXRegexFree(TXRegularExpression *regexp)
 	free(regexp);
 }
 
+void fprintParseError(FILE *stream, UParseError *parse_error)
+{
+
+	fprintf(stream ,"line : %d, offset : %d, precontext : %s, postcontext : %s\n",
+			parse_error->line, parse_error->offset, parse_error->preContext, parse_error->postContext);
+	
+}
+
 TXRegularExpression* TXRegexCreate(CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status)
 {
 	TXRegularExpression *regexp = malloc(sizeof(TXRegularExpression));

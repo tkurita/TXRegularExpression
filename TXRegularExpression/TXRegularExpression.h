@@ -87,6 +87,7 @@ typedef struct  {
 } TXRegularExpression;
 
 TXRegularExpression* TXRegexCreate(CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status);
+void fprintParseError(FILE *stream, UParseError *parse_error);
 void TXRegexFree(TXRegularExpression *regexp);
 CFIndex TXRegexSetString(TXRegularExpression *regexp, CFStringRef text, UErrorCode *status);
 
