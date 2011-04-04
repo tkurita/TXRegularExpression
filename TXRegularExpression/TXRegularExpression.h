@@ -98,6 +98,7 @@ CFStringRef TXRegexCreatePatternString(TXRegularExpression *regexp, UErrorCode *
 CFStringRef TXRegexCreateTargetString(TXRegularExpression *regexp, UErrorCode *status);
 
 #pragma mark additions to CFString
+CFStringRef CFStringCreateWithFormattingParseError(UParseError *parse_error);
 Boolean CFStringIsMatchedWithRegex(CFStringRef text, TXRegularExpression *regexp, UErrorCode *status);
 Boolean CFStringIsMatchedWithPattern(CFStringRef text, CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status);
 CFArrayRef CFStringCreateArrayWithFirstMatch(CFStringRef text, TXRegularExpression *regexp, CFIndex startIndex, UErrorCode *status);
