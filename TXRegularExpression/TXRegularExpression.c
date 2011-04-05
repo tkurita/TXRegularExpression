@@ -15,8 +15,7 @@ CFStringRef CFStringRetainAndGetUTF16Ptr(CFStringRef text, UniChar **outptr, CFI
 	*length = CFStringGetLength(text);
 	CFStringRef result = NULL;
 	if (*outptr) {
-		CFRetain(text);
-		result = text;
+		result = CFRetain(text);
 	} else {
 		size_t required_size = *length * sizeof(UniChar);
 		UniChar *buffer = malloc(required_size);
@@ -124,6 +123,7 @@ bail:
 
 void TXRegexFree(TXRegularExpression *regexp)
 {
+	if (!regexp) return;
 	uregex_close(regexp->uregexp);
 	SafeRelease(regexp->targetString);
 	free(regexp);
