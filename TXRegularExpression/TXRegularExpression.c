@@ -35,7 +35,7 @@ CFStringRef CFStringCreateWithRegexGroupWithLength(TXRegularExpression *regexp, 
 	UChar *buffer = malloc(buffer_size);
 	int32_t returned_size = uregex_group(re, gnum, buffer, buffer_size, status);
 	if (returned_size) {
-		result = CFStringCreateWithCharacters(kCFAllocatorDefault, buffer, len);
+		result = CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, buffer, len, kCFAllocatorDefault);
 	} 
 	return result;
 }
