@@ -56,7 +56,7 @@ CFArrayRef CFArrayCreateWithCapturedGroups(TXRegularExpression *regexp, UErrorCo
 		if (-1 == start) {
 			text = CFSTR("");
 		} else {
-			text = CFStringCreateWithRegexGroupWithLength(regexp, n, end-start+1, status);
+			text = CFStringCreateWithRegexGroupWithLength(regexp, n, end-start, status);
 		}
 		CFArrayAppendValue(result, text);
 		CFRelease(text);
@@ -84,7 +84,7 @@ CFArrayRef TXRegexCapturedGroups(TXRegularExpression *regexp, UErrorCode *status
 		if (-1 == start) {
 			values[2] = CFSTR("");
 		} else {
-			values[2] = CFStringCreateWithRegexGroupWithLength(regexp, n, end-start+1, status);
+			values[2] = CFStringCreateWithRegexGroupWithLength(regexp, n, end-start, status);
 		}
 		CFDictionaryRef dict = CFDictionaryCreate(kCFAllocatorDefault, (void *)keys, (void *)values, 3,  
 												  &kCFTypeDictionaryKeyCallBacks,  &kCFTypeDictionaryValueCallBacks);

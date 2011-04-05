@@ -182,11 +182,11 @@ int main (int argc, const char * argv[]) {
 	//test_RegexFirstMatchInString();
 	//test_TXRegexAllMatchesInString();
 	//test_CFStringCreateArrayWithFirstMatch();
-	//test_CFStringCreateArrayWithFirstMatch2();
+	test_CFStringCreateArrayWithFirstMatch2();
 	//test_CFStringCreateArrayWithAllMatches();
 	//test_CFStringCreateArrayByRegexSplitting();
 	//test_CFStringCreateByReplacingFirstMatch();
 	//test_CFStringCreateByReplacingAllMatches();
-	test_fprintfPaseError();
+	//test_fprintfPaseError();
 	return 0;
 }
