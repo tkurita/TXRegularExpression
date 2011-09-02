@@ -84,26 +84,28 @@ typedef enum URegexpFlag{
 typedef struct  {
 	URegularExpression *uregexp;
 	CFStringRef targetString;
-} TXRegularExpression;
+} TXRegexStruct;
 
-TXRegularExpression* TXRegexCreate(CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status);
+typedef CFDataRef TXRegexRef;
+
+TXRegexRef TXRegexCreate(CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status);
 void fprintParseError(FILE *stream, UParseError *parse_error);
-void TXRegexFree(TXRegularExpression *regexp);
-CFIndex TXRegexSetString(TXRegularExpression *regexp, CFStringRef text, UErrorCode *status);
+//void TXRegexFree(TXRegexStruct *regexp);
+CFIndex TXRegexSetString(TXRegexRef regexp, CFStringRef text, UErrorCode *status);
 
-CFArrayRef TXRegexFirstMatchInString(TXRegularExpression *regexp, CFStringRef text, CFIndex startIndex, UErrorCode *status);
-CFArrayRef TXRegexNextMatch(TXRegularExpression *regexp, UErrorCode *status);
-CFArrayRef TXRegexAllMatchesInString(TXRegularExpression *regexp, CFStringRef text, UErrorCode *status);
-CFStringRef TXRegexCreatePatternString(TXRegularExpression *regexp, UErrorCode *status);
-CFStringRef TXRegexCreateTargetString(TXRegularExpression *regexp, UErrorCode *status);
+CFArrayRef TXRegexFirstMatchInString(TXRegexRef regexp, CFStringRef text, CFIndex startIndex, UErrorCode *status);
+CFArrayRef TXRegexNextMatch(TXRegexRef regexp, UErrorCode *status);
+CFArrayRef TXRegexAllMatchesInString(TXRegexRef regexp, CFStringRef text, UErrorCode *status);
+CFStringRef TXRegexCreatePatternString(TXRegexRef regexp, UErrorCode *status);
+CFStringRef TXRegexCreateTargetString(TXRegexRef regexp, UErrorCode *status);
 
 #pragma mark additions to CFString
 CFStringRef CFStringCreateWithFormattingParseError(UParseError *parse_error);
-Boolean CFStringIsMatchedWithRegex(CFStringRef text, TXRegularExpression *regexp, UErrorCode *status);
+Boolean CFStringIsMatchedWithRegex(CFStringRef text, TXRegexRef regexp, UErrorCode *status);
 Boolean CFStringIsMatchedWithPattern(CFStringRef text, CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status);
-CFArrayRef CFStringCreateArrayWithFirstMatch(CFStringRef text, TXRegularExpression *regexp, CFIndex startIndex, UErrorCode *status);
-CFArrayRef CFStringCreateArrayWithAllMatches(CFStringRef text, TXRegularExpression *regexp, UErrorCode *status);
-CFArrayRef CFStringCreateArrayByRegexSplitting(CFStringRef text, TXRegularExpression *regexp, UErrorCode *status);
-CFStringRef CFStringCreateByReplacingFirstMatch(CFStringRef text, TXRegularExpression *regexp, CFStringRef replacement, UErrorCode *status);
-CFStringRef CFStringCreateByReplacingAllMatches(CFStringRef text, TXRegularExpression *regexp, CFStringRef replacement, UErrorCode *status);
+CFArrayRef CFStringCreateArrayWithFirstMatch(CFStringRef text, TXRegexRef regexp, CFIndex startIndex, UErrorCode *status);
+CFArrayRef CFStringCreateArrayWithAllMatches(CFStringRef text, TXRegexRef regexp, UErrorCode *status);
+CFArrayRef CFStringCreateArrayByRegexSplitting(CFStringRef text, TXRegexRef regexp, UErrorCode *status);
+CFStringRef CFStringCreateByReplacingFirstMatch(CFStringRef text, TXRegexRef regexp, CFStringRef replacement, UErrorCode *status);
+CFStringRef CFStringCreateByReplacingAllMatches(CFStringRef text, TXRegexRef regexp, CFStringRef replacement, UErrorCode *status);
 

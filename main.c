@@ -6,7 +6,7 @@ void test_CFStringCreateArrayByRegexSplitting()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("a"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(CFSTR("a"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -25,7 +25,7 @@ void test_RegexFirstMatchInString()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("aaa"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(CFSTR("aaa"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -36,7 +36,7 @@ void test_RegexFirstMatchInString()
 		fprintf(stderr, "Error on RegexFirstMatchInString with UErrorCode : %d\n", status);
 		return;
 	}
-	
+	CFRelease(regexp);
 	CFShow(array);	
 }
 
@@ -45,7 +45,7 @@ void test_TXRegexAllMatchesInString()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("aaa"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(CFSTR("aaa"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -65,13 +65,13 @@ void test_CFStringCreateArrayWithFirstMatch()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("basename(-([0-9\\.]+))?\\.(applescript|scptd|scpt)"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(CFSTR("basename(-([0-9\\.]*\\d[a-z]?))?(\\.(applescript|scptd|scpt))?$"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
 	}
 	
-	CFArrayRef array = CFStringCreateArrayWithFirstMatch(CFSTR("basename-1.scptd"), regexp, 0, &status);
+	CFArrayRef array = CFStringCreateArrayWithFirstMatch(CFSTR("basename-1a.sptd"), regexp, 0, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexFirstMatchInString with UErrorCode : %d\n", status);
 		return;
@@ -85,7 +85,7 @@ void test_CFStringCreateArrayWithFirstMatch2()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("\\s*(<|>|>=|=<)?\\s*([0-9\\.]+)\\s*"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(CFSTR("\\s*(<|>|>=|=<)?\\s*([0-9\\.]+)\\s*"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -105,13 +105,13 @@ void test_CFStringCreateArrayWithAllMatches()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("\\s*(<|>|>=|=<)?\\s*([0-9\\.]+)\\s*"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(CFSTR("\\s*(<|>|>=|=<)?\\s*([0-9\\.]+[a-z]?)\\s*"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
 	}
 	
-	CFArrayRef array = CFStringCreateArrayWithAllMatches(CFSTR(">= 1.2.3 < 1.2.4 1.1.1"), regexp, &status);
+	CFArrayRef array = CFStringCreateArrayWithAllMatches(CFSTR(">= 1.2.3 < 1.2.4a 1.1.1"), regexp, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on CFStringCreateArrayWithAllMatches with UErrorCode : %d\n", status);
 		return;
@@ -125,7 +125,7 @@ void test_CFStringCreateByReplacingFirstMatch()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("a+"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(CFSTR("a+"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -148,7 +148,7 @@ void test_CFStringCreateByReplacingAllMatches()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("a+"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(CFSTR("a+"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -171,7 +171,7 @@ void test_fprintfPaseError()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegularExpression *regexp = TXRegexCreate(CFSTR("a+)"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(CFSTR("a+)"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 	}
@@ -179,10 +179,10 @@ void test_fprintfPaseError()
 }
 
 int main (int argc, const char * argv[]) {
-	//test_RegexFirstMatchInString();
+	test_RegexFirstMatchInString();
 	//test_TXRegexAllMatchesInString();
 	//test_CFStringCreateArrayWithFirstMatch();
-	test_CFStringCreateArrayWithFirstMatch2();
+	//test_CFStringCreateArrayWithFirstMatch2();
 	//test_CFStringCreateArrayWithAllMatches();
 	//test_CFStringCreateArrayByRegexSplitting();
 	//test_CFStringCreateByReplacingFirstMatch();
