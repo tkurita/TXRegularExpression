@@ -6,7 +6,7 @@ void test_CFStringCreateArrayByRegexSplitting()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegexRef regexp = TXRegexCreate(CFSTR("a"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(kCFAllocatorDefault, CFSTR("a"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -25,7 +25,7 @@ void test_RegexFirstMatchInString()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegexRef regexp = TXRegexCreate(CFSTR("aaa"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(kCFAllocatorDefault, CFSTR("aaa"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -45,7 +45,7 @@ void test_TXRegexAllMatchesInString()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegexRef regexp = TXRegexCreate(CFSTR("aaa"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(kCFAllocatorDefault, CFSTR("aaa"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -65,7 +65,7 @@ void test_CFStringCreateArrayWithFirstMatch()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegexRef regexp = TXRegexCreate(CFSTR("basename(-([0-9\\.]*\\d[a-z]?))?(\\.(applescript|scptd|scpt))?$"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(kCFAllocatorDefault, CFSTR("basename(-([0-9\\.]*\\d[a-z]?))?(\\.(applescript|scptd|scpt))?$"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -85,7 +85,7 @@ void test_CFStringCreateArrayWithFirstMatch2()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegexRef regexp = TXRegexCreate(CFSTR("\\s*(<|>|>=|=<)?\\s*([0-9\\.]+)\\s*"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(kCFAllocatorDefault, CFSTR("\\s*(<|>|>=|=<)?\\s*([0-9\\.]+)\\s*"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -105,7 +105,7 @@ void test_CFStringCreateArrayWithAllMatches()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegexRef regexp = TXRegexCreate(CFSTR("\\s*(<|>|>=|=<)?\\s*([0-9\\.]+[a-z]?)\\s*"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(kCFAllocatorDefault, CFSTR("\\s*(<|>|>=|=<)?\\s*([0-9\\.]+[a-z]?)\\s*"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
@@ -125,12 +125,12 @@ void test_CFStringCreateByReplacingFirstMatch()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegexRef regexp = TXRegexCreate(CFSTR("a+"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(kCFAllocatorDefault, CFSTR("a+"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
 	}
-	CFStringRef pat = TXRegexCreatePatternString(regexp, &status);
+	CFStringRef pat = TXRegexCopyPatternString(regexp, &status);
 	CFShow(pat);
 	
 	CFStringRef string = CFStringCreateByReplacingFirstMatch(CFSTR("dd aaa bb aaa"), regexp, CFSTR("ffffff"), &status);
@@ -138,7 +138,7 @@ void test_CFStringCreateByReplacingFirstMatch()
 		fprintf(stderr, "Error on CFStringCreateByReplacingFirstMatch with UErrorCode : %d\n", status);
 		return;
 	}
-	CFStringRef target_string = TXRegexCreateTargetString(regexp, &status);
+	CFStringRef target_string = TXRegexCopyTargetString(regexp, &status);
 	CFShow(target_string);
 	CFShow(string);
 }
@@ -148,12 +148,12 @@ void test_CFStringCreateByReplacingAllMatches()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegexRef regexp = TXRegexCreate(CFSTR("a+"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(kCFAllocatorDefault, CFSTR("a+"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 		return;
 	}
-	CFStringRef pat = TXRegexCreatePatternString(regexp, &status);
+	CFStringRef pat = TXRegexCopyPatternString(regexp, &status);
 	CFShow(pat);
 	
 	CFStringRef string = CFStringCreateByReplacingAllMatches(CFSTR("aa aa"), regexp, CFSTR("fff"), &status);
@@ -161,7 +161,7 @@ void test_CFStringCreateByReplacingAllMatches()
 		fprintf(stderr, "Error on CFStringCreateByReplacingAllMatches with UErrorCode : %d\n", status);
 		return;
 	}
-	CFStringRef target_string = TXRegexCreateTargetString(regexp, &status);
+	CFStringRef target_string = TXRegexCopyTargetString(regexp, &status);
 	CFShow(target_string);
 	CFShow(string);
 }
@@ -171,7 +171,7 @@ void test_fprintfPaseError()
 	UParseError parse_error;
 	UErrorCode status = U_ZERO_ERROR;
 	
-	TXRegexRef regexp = TXRegexCreate(CFSTR("a+)"), 0, &parse_error, &status);
+	TXRegexRef regexp = TXRegexCreate(kCFAllocatorDefault, CFSTR("a+)"), 0, &parse_error, &status);
 	if (status != U_ZERO_ERROR) {
 		fprintf(stderr, "Error on RegexCreate with UErrorCode : %d\n", status);
 	}

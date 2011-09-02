@@ -6,6 +6,9 @@ URegularExpression *uregex_open(const  UChar   *pattern,
 
 void uregex_close(URegularExpression *regexp);
 
+URegularExpression* uregex_clone(const URegularExpression * regexp,
+								 UErrorCode *status);
+
 const UChar *uregex_pattern(const  URegularExpression   *regexp,
 							int32_t           *patLength,
 							UErrorCode        *status);

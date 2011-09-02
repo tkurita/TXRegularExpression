@@ -88,7 +88,9 @@ typedef struct  {
 
 typedef CFDataRef TXRegexRef;
 
-TXRegexRef TXRegexCreate(CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status);
+TXRegexRef TXRegexCreate(CFAllocatorRef allocator, CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status);
+TXRegexRef TXRegexCreateCopy(CFAllocatorRef allocator, TXRegexRef regexp, UErrorCode *status);
+
 void fprintParseError(FILE *stream, UParseError *parse_error);
 //void TXRegexFree(TXRegexStruct *regexp);
 CFIndex TXRegexSetString(TXRegexRef regexp, CFStringRef text, UErrorCode *status);
@@ -96,8 +98,8 @@ CFIndex TXRegexSetString(TXRegexRef regexp, CFStringRef text, UErrorCode *status
 CFArrayRef TXRegexFirstMatchInString(TXRegexRef regexp, CFStringRef text, CFIndex startIndex, UErrorCode *status);
 CFArrayRef TXRegexNextMatch(TXRegexRef regexp, UErrorCode *status);
 CFArrayRef TXRegexAllMatchesInString(TXRegexRef regexp, CFStringRef text, UErrorCode *status);
-CFStringRef TXRegexCreatePatternString(TXRegexRef regexp, UErrorCode *status);
-CFStringRef TXRegexCreateTargetString(TXRegexRef regexp, UErrorCode *status);
+CFStringRef TXRegexCopyPatternString(TXRegexRef regexp, UErrorCode *status);
+CFStringRef TXRegexCopyTargetString(TXRegexRef regexp, UErrorCode *status);
 
 #pragma mark additions to CFString
 CFStringRef CFStringCreateWithFormattingParseError(UParseError *parse_error);
