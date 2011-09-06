@@ -98,6 +98,11 @@ bail:
 	return result;
 }
 
+static TXRegexStruct* TXRegexGetStruct(TXRegexRef regexp)
+{
+	return (TXRegexStruct *)CFDataGetBytePtr(regexp);
+}
+
 #pragma mark Regex functions
 
 CFIndex TXRegexSetString(TXRegexRef regexp, CFStringRef text, UErrorCode *status)
@@ -106,7 +111,7 @@ CFIndex TXRegexSetString(TXRegexRef regexp, CFStringRef text, UErrorCode *status
 	CFIndex length = 0;
 	CFStringRef text_retained = CFStringRetainAndGetUTF16Ptr(text, &uchars, &length);
 	if (!text_retained) return 0;
-	TXRegexStruct* regex_struct = (TXRegexStruct*)CFDataGetBytePtr(regexp);
+	TXRegexStruct* regex_struct = TXRegexGetStruct(regexp);
 	if (regex_struct->targetString) {
 		uregex_reset(regex_struct->uregexp, 0, status);
 		if (U_ZERO_ERROR != *status) goto bail;
@@ -170,11 +175,6 @@ static CFAllocatorRef CreateTXRegexDeallocator(void) {
         allocator = CFAllocatorCreate(NULL, &context);
     }
     return allocator;
-}
-
-static TXRegexStruct* TXRegexGetStruct(TXRegexRef regexp)
-{
-	return (TXRegexStruct *)CFDataGetBytePtr(regexp);
 }
 
 TXRegexRef TXRegexCreate(CFAllocatorRef allocator, CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status)
