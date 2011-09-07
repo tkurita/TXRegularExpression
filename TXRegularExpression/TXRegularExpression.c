@@ -330,7 +330,7 @@ CFArrayRef CFStringCreateArrayWithFirstMatch(CFStringRef text, TXRegexRef regexp
 
 CFArrayRef CFStringCreateArrayWithAllMatches(CFStringRef text, TXRegexRef regexp, UErrorCode *status)
 {
-	if (!TXRegexSetString(regexp, text, status)) return NULL;
+	TXRegexSetString(regexp, text, status);
 	if (U_ZERO_ERROR != *status) return NULL;
 
 	CFArrayRef groups = NULL;
