@@ -1,6 +1,25 @@
 #include "UErrorCode.h"
 //#include "unicode/uregex.h"
 
+/* TXRegularExpression - regular expression for CoreFoundation
+ Copyright (C) 2011 Tetsuro KURITA.
+ 
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Library General Public License as published
+ by the Free Software Foundation; either version 2, or (at your option)
+ any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Library General Public License for more details.
+ 
+ You should have received a copy of the GNU Library General Public
+ License along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ USA. */
+
+
 #pragma mark icu definitions
 struct URegularExpression;
 typedef struct URegularExpression URegularExpression;
@@ -79,20 +98,50 @@ typedef enum URegexpFlag{
 	UREGEX_UWORD            = 256
 }  URegexpFlag;
 
-#pragma mark Regex functions
+#pragma mark TXRegex functions
 
 typedef struct  {
 	URegularExpression *uregexp;
 	CFStringRef targetString;
 } TXRegexStruct;
 
+/*!
+ @typedef TXRegexRef
+ @abstract A reference to an TXRegularExpresion object.
+*/
+
 typedef CFDataRef TXRegexRef;
 
+/*!
+ @function TXRegexCreate
+ @abstract Create a TXRegularExpression object. 
+ @param allocator The allocator to use to allocate memory for the new string. Pass NULL or kCFAllocatorDefault to use the current default allocator.
+ @param pattern A string of a regular expression
+ @param options options of regular expression.
+ @param parse_error A pointer to UParseError to receive information about errors occurred during parsing.
+ @param status A pointer to UErrorCode to recive any errors. U_ZERO_ERROR will be returned when no errors.
+ @result A reference to TXRegularExpression object.
+ */
 TXRegexRef TXRegexCreate(CFAllocatorRef allocator, CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status);
+
+
+/*!
+ @function TXRegexCreateCopy
+ @abstract Copy a TXRegularExpression object. 
+ @param regexp A TXRegularExpression object to copy.
+ @param status A pointer to UErrorCode to recive any errors. U_ZERO_ERROR will be returned when no errors.
+ @result A reference to TXRegularExpression object.
+ */
 TXRegexRef TXRegexCreateCopy(CFAllocatorRef allocator, TXRegexRef regexp, UErrorCode *status);
 
-void fprintParseError(FILE *stream, UParseError *parse_error);
-//void TXRegexFree(TXRegexStruct *regexp);
+/*!
+ @function TXRegexSetString
+ @abstract Set a taget string to TXRegularExpression object. 
+ @param regexp A TXRegularExpression object.
+ @param text A string to match with the regular expression.
+ @param status A pointer to UErrorCode to recive any errors. U_ZERO_ERROR will be returned when no errors.
+ @result length of the string to process.
+ */
 CFIndex TXRegexSetString(TXRegexRef regexp, CFStringRef text, UErrorCode *status);
 
 CFArrayRef TXRegexFirstMatchInString(TXRegexRef regexp, CFStringRef text, CFIndex startIndex, UErrorCode *status);
@@ -101,13 +150,51 @@ CFArrayRef TXRegexAllMatchesInString(TXRegexRef regexp, CFStringRef text, UError
 CFStringRef TXRegexCopyPatternString(TXRegexRef regexp, UErrorCode *status);
 CFStringRef TXRegexCopyTargetString(TXRegexRef regexp, UErrorCode *status);
 
+void fprintParseError(FILE *stream, UParseError *parse_error);
+
 #pragma mark additions to CFString
+/*!
+ @function CFStringCreateWithFormattingParseError
+ @abstract Make an error message from UParseError.
+ @param parse_error A pointer to UParseError.
+ @result A formatted error message.
+ */
 CFStringRef CFStringCreateWithFormattingParseError(UParseError *parse_error);
+
 Boolean CFStringIsMatchedWithRegex(CFStringRef text, TXRegexRef regexp, UErrorCode *status);
 Boolean CFStringIsMatchedWithPattern(CFStringRef text, CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status);
+
+/*!
+ @function CFStringCreateArrayWithFirstMatch
+ @abstract Obtain an arrey of captured groups in the first match.
+ @param text A string to process.
+ @param regexp A reference to TXRegularExpression object.
+ @param startIndex the index of the beginning character of the range to process.
+ @param status A pointer to UErrorCode to recive any errors. U_ZERO_ERROR will be returned when no errors.
+ @result An array of captured groups.
+ */
 CFArrayRef CFStringCreateArrayWithFirstMatch(CFStringRef text, TXRegexRef regexp, CFIndex startIndex, UErrorCode *status);
+
+/*!
+ @function CFStringCreateArrayWithAllMatches
+ @abstract Obtain an arrey of captured groups in all matches.
+ @param text A string to process.
+ @param regexp A reference to TXRegularExpression object.
+ @param status A pointer to UErrorCode to recive any errors. U_ZERO_ERROR will be returned when no errors.
+ @result An array of arrays of captured groups.
+ */
 CFArrayRef CFStringCreateArrayWithAllMatches(CFStringRef text, TXRegexRef regexp, UErrorCode *status);
+
 CFArrayRef CFStringCreateArrayByRegexSplitting(CFStringRef text, TXRegexRef regexp, UErrorCode *status);
 CFStringRef CFStringCreateByReplacingFirstMatch(CFStringRef text, TXRegexRef regexp, CFStringRef replacement, UErrorCode *status);
-CFStringRef CFStringCreateByReplacingAllMatches(CFStringRef text, TXRegexRef regexp, CFStringRef replacement, UErrorCode *status);
 
+/*!
+ @function CFStringCreateByReplacingAllMatches
+ @abstract Create a new string by replacing matched strings with a replacement.
+ @param text A string to process.
+ @param regexp A reference to TXRegularExpression object.
+ @param replacement A replacement string for matched strings with regexp.
+ @param status A pointer to UErrorCode to recive any errors. U_ZERO_ERROR will be returned when no errors.
+ @result A formatted error message.
+ */
+CFStringRef CFStringCreateByReplacingAllMatches(CFStringRef text, TXRegexRef regexp, CFStringRef replacement, UErrorCode *status);
