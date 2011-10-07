@@ -2,11 +2,13 @@
 #include "TXRegularExpression.h"
 #include "icu_regex.h"
 
-#define useLog 1
+#define useLog 0
 
 #pragma mark internal functions
 
-#define SafeRelease(v) if(v) CFRelease(v)
+#define SafeRelease(x) if(x) CFRelease(x)
+
+#define TXRegexGetStruct(x) (TXRegexStruct *)CFDataGetBytePtr(x);
 
 CFStringRef CFStringRetainAndGetUTF16Ptr(CFStringRef text, UniChar **outptr, CFIndex *length)
 {
@@ -16,6 +18,9 @@ CFStringRef CFStringRetainAndGetUTF16Ptr(CFStringRef text, UniChar **outptr, CFI
 	if (*outptr) {
 		result = CFRetain(text);
 	} else {
+#if useLog
+		fputs("will malloc in CFStringRetainAndGetUTF16Ptr\n", stderr);
+#endif		
 		size_t required_size = *length * sizeof(UniChar);
 		UniChar *buffer = malloc(required_size);
 		if (!buffer) goto bail;
@@ -30,7 +35,7 @@ bail:
 CFStringRef CFStringCreateWithRegexGroupWithLength(TXRegexRef regexp, CFIndex gnum, CFIndex len, UErrorCode *status)
 {
 	CFStringRef result = NULL;
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	URegularExpression *re = regexp_struct->uregexp;
 	int32_t buffer_size = len * sizeof(UniChar);
 	UChar *buffer = malloc(buffer_size);
@@ -46,7 +51,7 @@ CFStringRef CFStringCreateWithRegexGroupWithLength(TXRegexRef regexp, CFIndex gn
 CFArrayRef CFArrayCreateWithCapturedGroups(TXRegexRef regexp, UErrorCode *status)
 {
 	CFMutableArrayRef result = NULL;
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	URegularExpression *re = regexp_struct->uregexp;
 	int32_t gcount = uregex_groupCount(re, status) + 1;
 	if (U_ZERO_ERROR != *status) return NULL;
@@ -72,7 +77,7 @@ bail:
 CFArrayRef TXRegexCapturedGroups(TXRegexRef regexp, UErrorCode *status)
 {
 	CFMutableArrayRef result = NULL;
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	URegularExpression *re = regexp_struct->uregexp;
 	int32_t gcount = uregex_groupCount(re, status) + 1;
 	if (U_ZERO_ERROR != *status) goto bail;
@@ -103,11 +108,6 @@ bail:
 	return result;
 }
 
-static TXRegexStruct* TXRegexGetStruct(TXRegexRef regexp)
-{
-	return (TXRegexStruct *)CFDataGetBytePtr(regexp);
-}
-
 #pragma mark Regex functions
 
 CFIndex TXRegexSetString(TXRegexRef regexp, CFStringRef text, UErrorCode *status)
@@ -118,6 +118,9 @@ CFIndex TXRegexSetString(TXRegexRef regexp, CFStringRef text, UErrorCode *status
 	if (!text_retained) return 0;
 	TXRegexStruct* regex_struct = TXRegexGetStruct(regexp);
 	if (regex_struct->targetString) {
+#if useLog
+		fputs("before uregex_reset\n", stderr);
+#endif		
 		uregex_reset(regex_struct->uregexp, 0, status);
 		if (U_ZERO_ERROR != *status) goto bail;
 		CFRelease(regex_struct->targetString);
@@ -216,7 +219,7 @@ TXRegexRef TXRegexCreateCopy(CFAllocatorRef allocator, TXRegexRef regexp, UError
 #if useLog
 	fputs("TXRegexCreateCopy\n", stderr);
 #endif	
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	URegularExpression *new_uregexp = uregex_clone(regexp_struct->uregexp, status);
 	if (U_ZERO_ERROR != *status) return NULL;
 	
@@ -237,7 +240,7 @@ CFStringRef TXRegexCopyPatternString(TXRegexRef regexp, UErrorCode *status)
 {
 	int32_t len;
 	const UChar *uchars = NULL;
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	uchars = uregex_pattern(regexp_struct->uregexp, &len, status);
 	if (U_ZERO_ERROR != *status) return NULL;
 	return CFStringCreateWithCharacters(kCFAllocatorDefault, uchars, len);
@@ -247,7 +250,7 @@ CFStringRef TXRegexCopyTargetString(TXRegexRef regexp, UErrorCode *status)
 {
 	int32_t len;
 	const UChar *uchars = NULL;
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	uchars = uregex_getText(regexp_struct->uregexp, &len, status);
 	if (U_ZERO_ERROR != *status) return NULL;
 	return CFStringCreateWithCharacters(kCFAllocatorDefault, uchars, len);
@@ -255,7 +258,7 @@ CFStringRef TXRegexCopyTargetString(TXRegexRef regexp, UErrorCode *status)
 
 CFArrayRef CFArrayCreateWithFirstMatch(TXRegexRef regexp, CFIndex startIndex, UErrorCode *status)
 {
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	if (!uregex_find(regexp_struct->uregexp, startIndex, status)) return NULL;
 	if (U_ZERO_ERROR != *status) return NULL;
 	return CFArrayCreateWithCapturedGroups(regexp, status);
@@ -263,7 +266,7 @@ CFArrayRef CFArrayCreateWithFirstMatch(TXRegexRef regexp, CFIndex startIndex, UE
 
 CFArrayRef CFArrayCreateWithNextMatch(TXRegexRef regexp, UErrorCode *status)
 {
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	if (!uregex_findNext(regexp_struct->uregexp, status)) return NULL;
 	if (U_ZERO_ERROR != *status) return NULL;
 	return CFArrayCreateWithCapturedGroups(regexp, status);
@@ -271,7 +274,7 @@ CFArrayRef CFArrayCreateWithNextMatch(TXRegexRef regexp, UErrorCode *status)
 
 CFArrayRef TXRegexFirstMatch(TXRegexRef regexp, CFIndex startIndex, UErrorCode *status)
 {
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	if (!uregex_find(regexp_struct->uregexp, startIndex, status)) return NULL;
 	if (U_ZERO_ERROR != *status) return NULL;
 	return TXRegexCapturedGroups(regexp, status);
@@ -279,7 +282,7 @@ CFArrayRef TXRegexFirstMatch(TXRegexRef regexp, CFIndex startIndex, UErrorCode *
 
 CFArrayRef TXRegexNextMatch(TXRegexRef regexp, UErrorCode *status)
 {
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	if (!uregex_findNext(regexp_struct->uregexp, status)) return NULL;
 	if (U_ZERO_ERROR != *status) return NULL;
 	return TXRegexCapturedGroups(regexp, status);
@@ -318,7 +321,7 @@ Boolean CFStringIsMatchedWithRegex(CFStringRef text, TXRegexRef regexp, UErrorCo
 {
 	Boolean result = false;
 	if (TXRegexSetString(regexp, text, status)) {
-		TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+		TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 		result = (Boolean)uregex_matches(regexp_struct->uregexp, 0, status);	
 	}
 	return result;
@@ -348,6 +351,9 @@ CFArrayRef CFStringCreateArrayWithFirstMatch(CFStringRef text, TXRegexRef regexp
 
 CFArrayRef CFStringCreateArrayWithAllMatches(CFStringRef text, TXRegexRef regexp, UErrorCode *status)
 {
+#if useLog
+	fputs("CFStringCreateArrayWithAllMatches\n", stderr);
+#endif	
 	TXRegexSetString(regexp, text, status);
 	if (U_ZERO_ERROR != *status) return NULL;
 
@@ -369,7 +375,7 @@ CFArrayRef CFStringCreateArrayByRegexSplitting(CFStringRef text, TXRegexRef rege
 {
 	if (!TXRegexSetString(regexp, text, status)) return NULL;
 	if (U_ZERO_ERROR != *status) return NULL;
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);	
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);	
 	URegularExpression *re = regexp_struct->uregexp;
 	CFIndex length = CFStringGetLength(text);
 	CFMutableArrayRef array = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
@@ -424,7 +430,7 @@ CFStringRef CFStringCreateByReplacingFirstMatch(CFStringRef text, TXRegexRef reg
 	
 	int32_t capacity = target_len + replacement_len;
 	UChar *buffer = malloc(capacity * sizeof(UChar));
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	int32_t result_len = uregex_replaceFirst(regexp_struct->uregexp, replacement_chars, replacement_len, buffer, capacity, status);
 	CFRelease(replacement_retained);
 	if (U_ZERO_ERROR != *status) {
@@ -441,7 +447,7 @@ CFStringRef CFStringCreateByReplacingAllMatches(CFStringRef text, TXRegexRef reg
 	CFIndex target_len = TXRegexSetString(regexp, text, status);
 	if (!target_len) return NULL;
 	if (U_ZERO_ERROR != *status) return NULL;
-	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
+	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	URegularExpression *re = regexp_struct->uregexp;
 	UniChar *replacement_chars = NULL;
 	CFIndex replacement_len = 0;
