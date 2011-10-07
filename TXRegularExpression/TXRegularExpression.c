@@ -187,8 +187,6 @@ static CFAllocatorRef CreateTXRegexDeallocator(void) {
     return allocator;
 }
 
-static CFAllocatorRef TXRegexDeallocateor = NULL;
-
 TXRegexRef TXRegexCreate(CFAllocatorRef allocator, CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status)
 {
 	TXRegexStruct *regexp_struct = malloc(sizeof(TXRegexStruct));
@@ -207,9 +205,9 @@ TXRegexRef TXRegexCreate(CFAllocatorRef allocator, CFStringRef pattern, uint32_t
 	regexp_struct->uregexp = uregex_open(uchars, length, options, parse_error, status);
 	
 	CFRelease(pattern_retained);
-	if (! TXRegexDeallocateor) TXRegexDeallocateor = CreateTXRegexDeallocator();
+	CFAllocatorRef deallocator = CreateTXRegexDeallocator();
 	TXRegexRef regexp = CFDataCreateWithBytesNoCopy(allocator, (const UInt8 *)regexp_struct, 
-															  sizeof(TXRegexStruct), TXRegexDeallocateor);
+															  sizeof(TXRegexStruct), deallocator);
 	return regexp;
 }
 
@@ -226,8 +224,9 @@ TXRegexRef TXRegexCreateCopy(CFAllocatorRef allocator, TXRegexRef regexp, UError
 	TXRegexStruct *new_regexp_struct = malloc(sizeof(TXRegexStruct));
 	if (!new_regexp_struct) return NULL;
 	new_regexp_struct->targetString = NULL;
+	CFAllocatorRef deallocator = CreateTXRegexDeallocator();
 	TXRegexRef new_regexp = CFDataCreateWithBytesNoCopy(allocator, (const UInt8 *)new_regexp_struct, 
-													sizeof(TXRegexStruct), TXRegexDeallocateor);
+													sizeof(TXRegexStruct), deallocator);
 	new_regexp_struct->uregexp = new_uregexp;
 	
 	return new_regexp; 
