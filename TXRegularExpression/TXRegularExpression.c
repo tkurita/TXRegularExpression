@@ -2,28 +2,28 @@
 #include "TXRegularExpression.h"
 #include "icu_regex.h"
 
+#define useLog 1
+
 #pragma mark internal functions
 
-void SafeRelease(CFTypeRef value)
-{
-	if (value) CFRelease(value);
-}
+#define SafeRelease(v) if(v) CFRelease(v)
 
 CFStringRef CFStringRetainAndGetUTF16Ptr(CFStringRef text, UniChar **outptr, CFIndex *length)
 {
+	CFStringRef result = NULL;
 	*outptr = (UniChar *)CFStringGetCharactersPtr(text);
 	*length = CFStringGetLength(text);
-	CFStringRef result = NULL;
 	if (*outptr) {
 		result = CFRetain(text);
 	} else {
 		size_t required_size = *length * sizeof(UniChar);
 		UniChar *buffer = malloc(required_size);
-		if (!buffer) return false;
+		if (!buffer) goto bail;
 		CFStringGetCharacters(text, CFRangeMake(0L, *length), buffer); // Convert regexString to UTF16.
 		*outptr = (UniChar *)buffer;
-		result = CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, buffer, *length, kCFAllocatorDefault);
+		result = CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, buffer, *length, kCFAllocatorMalloc);
 	}
+bail:	
 	return result;
 }
 
@@ -36,8 +36,10 @@ CFStringRef CFStringCreateWithRegexGroupWithLength(TXRegexRef regexp, CFIndex gn
 	UChar *buffer = malloc(buffer_size);
 	int32_t returned_size = uregex_group(re, gnum, buffer, buffer_size, status);
 	if (returned_size) {
-		result = CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, buffer, len, kCFAllocatorDefault);
-	} 
+		result = CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, buffer, len, kCFAllocatorMalloc);
+	} else {
+		free(buffer);
+	}
 	return result;
 }
 
@@ -75,8 +77,8 @@ CFArrayRef TXRegexCapturedGroups(TXRegexRef regexp, UErrorCode *status)
 	int32_t gcount = uregex_groupCount(re, status) + 1;
 	if (U_ZERO_ERROR != *status) goto bail;
 	result = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+	CFStringRef keys[] = {CFSTR("start"), CFSTR("end"), CFSTR("text")};
 	for (int n = 0; n < gcount; n++) {
-		CFStringRef keys[] = {CFSTR("start"), CFSTR("end"), CFSTR("text")};
 		CFTypeRef values[3];
 		int32_t start = uregex_start(re, n, status);
 		if (U_ZERO_ERROR != *status) goto bail;
@@ -93,6 +95,9 @@ CFArrayRef TXRegexCapturedGroups(TXRegexRef regexp, UErrorCode *status)
 												  &kCFTypeDictionaryKeyCallBacks,  &kCFTypeDictionaryValueCallBacks);
 		CFArrayAppendValue(result, dict);
 		CFRelease(dict);
+		CFRelease(values[0]);
+		CFRelease(values[2]);
+		CFRelease(values[1]);
 	}
 bail:
 	return result;
@@ -139,7 +144,13 @@ static void TXRegexFree(TXRegexStruct *regexp)
 
 static void TXRegexDeallocate(void *ptr, void *info)
 {
-	TXRegexFree((TXRegexStruct *)ptr);
+#if useLog
+	fputs("TXRegexDeallocate\n", stderr);
+#endif		
+	TXRegexStruct *regexp = (TXRegexStruct *)ptr;
+	uregex_close(regexp->uregexp);
+	SafeRelease(regexp->targetString);
+	free(regexp);
 }	
 
 void fprintParseError(FILE *stream, UParseError *parse_error)
@@ -171,11 +182,12 @@ static CFAllocatorRef CreateTXRegexDeallocator(void) {
 		TXRegexDeallocate, //CFAllocatorDeallocateCallBack 
 		NULL //CFAllocatorPreferredSizeCallBack 
 		};
-        context.info = malloc(sizeof(int));
         allocator = CFAllocatorCreate(NULL, &context);
     }
     return allocator;
 }
+
+static CFAllocatorRef TXRegexDeallocateor = NULL;
 
 TXRegexRef TXRegexCreate(CFAllocatorRef allocator, CFStringRef pattern, uint32_t options, UParseError *parse_error, UErrorCode *status)
 {
@@ -195,23 +207,30 @@ TXRegexRef TXRegexCreate(CFAllocatorRef allocator, CFStringRef pattern, uint32_t
 	regexp_struct->uregexp = uregex_open(uchars, length, options, parse_error, status);
 	
 	CFRelease(pattern_retained);
-	CFAllocatorRef deallocator = CreateTXRegexDeallocator();
+	if (! TXRegexDeallocateor) TXRegexDeallocateor = CreateTXRegexDeallocator();
 	TXRegexRef regexp = CFDataCreateWithBytesNoCopy(allocator, (const UInt8 *)regexp_struct, 
-															  sizeof(TXRegexStruct), deallocator);
+															  sizeof(TXRegexStruct), TXRegexDeallocateor);
 	return regexp;
 }
 
 TXRegexRef TXRegexCreateCopy(CFAllocatorRef allocator, TXRegexRef regexp, UErrorCode *status)
 {
+#if useLog
+	fputs("TXRegexCreateCopy\n", stderr);
+#endif	
 	TXRegexStruct *regexp_struct = (TXRegexStruct *)CFDataGetBytePtr(regexp);
 	URegularExpression *new_uregexp = uregex_clone(regexp_struct->uregexp, status);
 	if (U_ZERO_ERROR != *status) return NULL;
 	
-	TXRegexRef new_regexp = CFDataCreateCopy(allocator, regexp);
-	TXRegexStruct *new_struct = TXRegexGetStruct(new_regexp);
-	new_struct->uregexp = new_uregexp;
 	
-	return new_regexp;
+	TXRegexStruct *new_regexp_struct = malloc(sizeof(TXRegexStruct));
+	if (!new_regexp_struct) return NULL;
+	new_regexp_struct->targetString = NULL;
+	TXRegexRef new_regexp = CFDataCreateWithBytesNoCopy(allocator, (const UInt8 *)new_regexp_struct, 
+													sizeof(TXRegexStruct), TXRegexDeallocateor);
+	new_regexp_struct->uregexp = new_uregexp;
+	
+	return new_regexp; 
 }
 
 
@@ -414,7 +433,7 @@ CFStringRef CFStringCreateByReplacingFirstMatch(CFStringRef text, TXRegexRef reg
 		return NULL;
 	}
 
-	return CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, buffer, result_len, kCFAllocatorDefault);
+	return CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, buffer, result_len, kCFAllocatorMalloc);
 }
 
 CFStringRef CFStringCreateByReplacingAllMatches(CFStringRef text, TXRegexRef regexp, 
@@ -448,5 +467,5 @@ CFStringRef CFStringCreateByReplacingAllMatches(CFStringRef text, TXRegexRef reg
 		return NULL;
 	}
 	
-	return CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, buffer, result_len, kCFAllocatorDefault);
+	return CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, buffer, result_len, kCFAllocatorMalloc);
 }
