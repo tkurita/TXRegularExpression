@@ -72,3 +72,7 @@ int32_t uregex_replaceFirst(URegularExpression  *regexp,
 							int32_t              destCapacity,
 							UErrorCode          *status);
 
+char* u_austrcpy(char *dst,
+				 const UChar *src );
+
+int32_t u_strlen(const UChar *s);

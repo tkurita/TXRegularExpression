@@ -154,14 +154,32 @@ static void TXRegexDeallocate(void *ptr, void *info)
 	uregex_close(regexp->uregexp);
 	SafeRelease(regexp->targetString);
 	free(regexp);
-}	
+}
+
+char *austrdup(const UChar* unichars)
+
+{
+    int   length;
+    char *newString;
+	
+    length    = u_strlen ( unichars );
+    newString = (char*)malloc ( sizeof( char ) * 4 * ( length + 1 ) );
+    if ( newString == NULL )
+        return NULL;
+	
+    u_austrcpy ( newString, unichars );
+	
+    return newString;
+}
 
 void fprintParseError(FILE *stream, UParseError *parse_error)
 {
-
+	char *post_context = austrdup(parse_error->postContext);
+	char *pre_context = austrdup(parse_error->preContext);
 	fprintf(stream ,"line : %d, offset : %d, precontext : %s, postcontext : %s\n",
-			parse_error->line, parse_error->offset, parse_error->preContext, parse_error->postContext);
-	
+			parse_error->line, parse_error->offset, pre_context, post_context);
+	free(post_context);
+	free(pre_context);
 }
 
 CFStringRef CFStringCreateWithFormattingParseError(UParseError *parse_error)
