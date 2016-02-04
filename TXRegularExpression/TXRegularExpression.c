@@ -184,9 +184,13 @@ void fprintParseError(FILE *stream, UParseError *parse_error)
 
 CFStringRef CFStringCreateWithFormattingParseError(UParseError *parse_error)
 {
-		return CFStringCreateWithFormat(kCFAllocatorDefault, NULL, 
+    char *post_context = austrdup(parse_error->postContext);
+	char *pre_context = austrdup(parse_error->preContext);
+    return CFStringCreateWithFormat(kCFAllocatorDefault, NULL,
 								CFSTR("line : %d, offset : %d, precontext : %s, postcontext : %s\n"),
-								parse_error->line, parse_error->offset, parse_error->preContext, parse_error->postContext);
+								parse_error->line, parse_error->offset, pre_context, post_context);
+    free(post_context);
+	free(pre_context);
 }
 
 static CFAllocatorRef CreateTXRegexDeallocator(void) {
