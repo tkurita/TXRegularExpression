@@ -326,7 +326,7 @@ CFArrayRef TXRegexAllMatchesInString(TXRegexRef regexp, CFStringRef text, UError
 	matches = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	CFArrayRef a_match = NULL;
-	while (a_match = TXRegexNextMatch(regexp, status)) {
+	while ((a_match = TXRegexNextMatch(regexp, status))) {
 		if(U_ZERO_ERROR != *status) {
 			CFRelease(a_match);
 			break;
@@ -381,7 +381,7 @@ CFArrayRef CFStringCreateArrayWithAllMatches(CFStringRef text, TXRegexRef regexp
 
 	CFArrayRef groups = NULL;
 	CFMutableArrayRef array = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-	while (groups = CFArrayCreateWithNextMatch(regexp, status)) {
+	while ((groups = CFArrayCreateWithNextMatch(regexp, status))) {
 		if (U_ZERO_ERROR != *status) {
 			CFRelease(groups);
 			break;
