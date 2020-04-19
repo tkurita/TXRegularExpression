@@ -40,7 +40,7 @@ CFStringRef CFStringCreateWithRegexGroupWithLength(TXRegexRef regexp,
 	CFStringRef result = NULL;
 	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	URegularExpression *re = regexp_struct->uregexp;
-	int32_t buffer_size = (int32_t)len * sizeof(UniChar);
+	int32_t buffer_size = (int32_t)(len + 1) * sizeof(UniChar); // without character length + 1 cause malloc error.
 	UChar *buffer = malloc(buffer_size);
 	int32_t returned_size = uregex_group(re, (int32_t)gnum, buffer, buffer_size, status);
 	if (returned_size) {
@@ -59,17 +59,21 @@ CFArrayRef CFArrayCreateWithCapturedGroups(TXRegexRef regexp, UErrorCode *status
 	URegularExpression *re = regexp_struct->uregexp;
 	int32_t gcount = uregex_groupCount(re, status) + 1;
 	if (U_ZERO_ERROR != *status) return NULL;
-	result = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+	result = CFArrayCreateMutable(kCFAllocatorDefault, gcount, &kCFTypeArrayCallBacks);
 	for (int n = 0; n < gcount; n++) {
 		int32_t start = uregex_start(re, n, status);
 		if (U_ZERO_ERROR != *status) goto bail;
 		int32_t end = uregex_end(re, n, status);
 		if (U_ZERO_ERROR != *status) goto bail;
-		CFStringRef text;
-		if (-1 == start) {
+		CFStringRef text = NULL;
+        if (-1 == start) {
 			text = CFSTR("");
 		} else {
 			text = CFStringCreateWithRegexGroupWithLength(regexp, n, end-start, status);
+            if (!text) {
+                fprintf(stderr, "Failed to create CFString\n");
+                goto bail;
+            }
 		}
 		CFArrayAppendValue(result, text);
 		CFRelease(text);
@@ -140,7 +144,7 @@ bail:
 	SafeRelease(text_retained);
 	return 0;
 }
-
+/*
 static void TXRegexFree(TXRegexStruct *regexp)
 {
 	if (!regexp) return;
@@ -148,6 +152,7 @@ static void TXRegexFree(TXRegexStruct *regexp)
 	SafeRelease(regexp->targetString);
 	free(regexp);
 }
+*/
 
 static void TXRegexDeallocate(void *ptr, void *info)
 {
@@ -456,7 +461,7 @@ CFStringRef CFStringCreateByReplacingFirstMatch(CFStringRef text, TXRegexRef reg
                                                                     &replacement_chars, &replacement_len);
 	if (!replacement_retained) return NULL;
 	
-	int32_t capacity = (int32_t)(target_len + replacement_len);
+	int32_t capacity = (int32_t)(target_len + replacement_len + 1);
 	UChar *buffer = malloc(capacity * sizeof(UChar));
 	TXRegexStruct *regexp_struct = TXRegexGetStruct(regexp);
 	int32_t result_len = uregex_replaceFirst(regexp_struct->uregexp, replacement_chars,
@@ -484,7 +489,7 @@ CFStringRef CFStringCreateByReplacingAllMatches(CFStringRef text, TXRegexRef reg
                                                                     &replacement_chars, &replacement_len);
 	if (!replacement_retained) return NULL;
 	
-	int32_t capacity = (int32_t)(target_len + replacement_len);
+	int32_t capacity = (int32_t)(target_len + replacement_len + 1);
 	UChar *buffer = malloc(capacity * sizeof(UChar));
 	int32_t result_len = uregex_replaceAll(re, replacement_chars, (int32_t)replacement_len,
                                            buffer, capacity, status);
